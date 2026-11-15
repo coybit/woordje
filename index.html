@@ -220,18 +220,27 @@ function setStatus(k, st, scanTitle) {
 /* ---------- dictionary (Wiktionary: English definitions of Dutch words) ---------- */
 const strip = (h) => { const d = document.createElement('div'); d.innerHTML = h; return d.textContent.replace(/\s+/g, ' ').trim(); };
 async function lookup(k) {
-  if (dict[k]) return dict[k].none ? null : dict[k];
-  let result = null;
+  if (dict[k] && !dict[k].none) return dict[k];
+  let result = null, network = true;
   for (const w of [k, k.charAt(0).toUpperCase() + k.slice(1)]) {
     try {
       const r = await fetch('https://en.wiktionary.org/api/rest_v1/page/definition/' + encodeURIComponent(w));
+      if (r.status >= 500 || r.status === 429) network = false;   // transient: don't remember as "missing"
       if (!r.ok) continue;
       const j = await r.json();
       const entries = (j.nl || []).map(e => ({ p: e.partOfSpeech, defs: (e.definitions || []).map(d => strip(d.definition)).filter(Boolean).slice(0, 3) })).filter(e => e.defs.length).slice(0, 3);
       if (entries.length) { result = { pos: entries }; break; }
     } catch { return undefined; }              // offline: don't cache
   }
-  dict[k] = result || { none: true }; lsSet(LS_DICT, dict);
+  if (!result) {                                // fallback: machine translation of the word
+    try {
+      const r = await fetch('https://api.mymemory.translated.net/get?langpair=nl|en&q=' + encodeURIComponent(k));
+      const j = await r.json(); const t = strip((j.responseData && j.responseData.translatedText) || '');
+      if (t && !/MYMEMORY|QUERY LENGTH|INVALID/i.test(t) && t.toLowerCase() !== k) result = { pos: [{ p: 'translation', defs: [t] }] };
+    } catch { network = false; }
+  }
+  if (result) { dict[k] = result; lsSet(LS_DICT, dict); }
+  else if (network) { dict[k] = { none: true }; lsSet(LS_DICT, dict); }
   return result;
 }
 const shortMeaning = (d) => d && d.pos && d.pos[0] ? d.pos[0].defs[0] : '';
