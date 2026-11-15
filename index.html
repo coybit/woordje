@@ -46,11 +46,11 @@ h1,h2{font-family:Newsreader,Georgia,serif;font-weight:600;margin:0}
 .stagewrap{flex:1;background:#8F8878;border-radius:18px;overflow:auto;padding:10px;max-height:calc(100dvh - 240px);min-height:300px}
 .stage{position:relative;width:100%;line-height:0}
 .stage img{width:100%;height:auto;display:block;border-radius:6px}
-.wb{position:absolute;padding:0;margin:0;border:0;border-radius:4px;background:transparent}
-.wb.new{background:rgba(255,208,138,.55);box-shadow:inset 0 0 0 1.5px var(--new-b)}
-.wb.learning{background:rgba(185,210,255,.6);box-shadow:inset 0 0 0 1.5px var(--learn-b)}
-.wb.learned{box-shadow:inset 0 -2.5px 0 var(--known)}
-.wb.sel{outline:2.5px solid var(--ink);outline-offset:1px}
+.wb{position:absolute;padding:0;margin:0;border:0;border-radius:3px;background:transparent;mix-blend-mode:multiply}
+.wb.new{background:rgba(255,208,138,.35);box-shadow:inset 0 0 0 .75px var(--new-b)}
+.wb.learning{background:rgba(150,190,255,.35);box-shadow:inset 0 0 0 .75px var(--learn-b)}
+.wb.learned{box-shadow:inset 0 -1.5px 0 var(--known)}
+.wb.sel{outline:1.5px solid var(--ink);outline-offset:1px}
 .hint{text-align:center;color:var(--muted);font-size:13px;margin:10px 0 0}
 .seg{display:flex;gap:6px;padding:4px;border-radius:14px;background:var(--seg)}
 .seg button{flex:1;min-height:44px;border:0;border-radius:10px;background:transparent;color:#3B4256;font-size:14px;font-weight:600}
