@@ -65,6 +65,18 @@ h1,h2{font-family:Newsreader,Georgia,serif;font-weight:600;margin:0}
 .card .tx small{font-size:12px;color:var(--muted)}
 .card .act{min-height:44px;padding:0 14px;border:0;border-radius:12px;background:var(--known);color:#fff;font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px}
 .card .act.alt{background:var(--seg);color:var(--ink)}
+.cropstage{flex:1;display:grid;place-items:center;background:#2B2B2B;border-radius:18px;padding:16px;margin:8px 0 12px;min-height:280px;overflow:hidden}
+.cropwrap{position:relative;display:inline-block;line-height:0;touch-action:none}
+#cropCanvas{display:block;max-width:100%;max-height:calc(100dvh - 300px)}
+#cropBox{position:absolute;border:2px solid #fff;box-shadow:0 0 0 9999px rgba(0,0,0,.55);cursor:move;touch-action:none}
+#cropBox .hd{position:absolute;width:30px;height:30px;transform:translate(-50%,-50%);touch-action:none}
+#cropBox .hd:after{content:"";position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:4px;background:#fff;box-shadow:0 0 0 1.5px rgba(0,0,0,.5)}
+.hd.nw{left:0;top:0}.hd.n{left:50%;top:0}.hd.ne{left:100%;top:0}.hd.e{left:100%;top:50%}.hd.se{left:100%;top:100%}.hd.s{left:50%;top:100%}.hd.sw{left:0;top:100%}.hd.w{left:0;top:50%}
+.croptools{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.croptools input[type=range]{flex:1;min-height:44px}
+.croptools label{font-size:13px;font-weight:600;color:var(--muted)}
+.croptools .iconbtn{background:var(--card)}
+.cropact{display:flex;gap:10px}
 #scrim{position:fixed;inset:0;background:rgba(29,35,48,.4);z-index:10}
 #sheet{position:fixed;left:0;right:0;bottom:0;z-index:11;max-width:520px;margin:0 auto;background:#fff;border-radius:24px 24px 0 0;box-shadow:0 -8px 30px rgba(0,0,0,.18);padding:12px 24px max(28px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:16px;max-height:88dvh;overflow:auto}
 .grab{align-self:center;width:40px;height:5px;border-radius:3px;background:#C9CCD4}
@@ -128,6 +140,24 @@ h1,h2{font-family:Newsreader,Georgia,serif;font-weight:600;margin:0}
     <button class="learned" data-tab="learned" aria-pressed="false">Learned</button>
   </div>
   <div class="cards" id="wList"></div>
+</main>
+
+<main class="view" id="cropper" hidden>
+  <div class="rtop">
+    <button class="iconbtn" id="cBack" aria-label="Cancel"><svg class="icon" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div class="title"><b>Crop and rotate</b><span>Keep just the text you want to read</span></div>
+  </div>
+  <div class="cropstage"><div class="cropwrap" id="cropWrap"><canvas id="cropCanvas"></canvas><div id="cropBox"></div></div></div>
+  <div class="croptools">
+    <button class="iconbtn" id="cRotL" aria-label="Rotate left"><svg class="icon" viewBox="0 0 24 24"><path d="M4 4v6h6"/><path d="M4.5 14a8 8 0 1 0 2-8.5L4 10"/></svg></button>
+    <button class="iconbtn" id="cRotR" aria-label="Rotate right"><svg class="icon" viewBox="0 0 24 24"><path d="M20 4v6h-6"/><path d="M19.5 14a8 8 0 1 1-2-8.5L20 10"/></svg></button>
+    <label for="cFine">Straighten</label>
+    <input type="range" id="cFine" min="-15" max="15" step="0.5" value="0">
+  </div>
+  <div class="cropact">
+    <button class="btn" id="cCancel" style="flex:1">Cancel</button>
+    <button class="btn primary" id="cScan" style="flex:2">Scan text</button>
+  </div>
 </main>
 
 <div id="scrim" hidden></div>
@@ -216,12 +246,66 @@ async function loadImage(file) {
   c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
   return c;
 }
-async function scanFile(file) {
+/* ---------- crop & rotate ---------- */
+const cr = { base: null, fine: 0, rect: { x: 0, y: 0, w: 1, h: 1 } };
+const MINC = 0.05;
+async function pickFile(file) {
   if (!file) return;
+  try { cr.base = await loadImage(file); } catch { toast('Could not open that image.'); return; }
+  cr.fine = 0; $('#cFine').value = 0; cr.rect = { x: 0, y: 0, w: 1, h: 1 };
+  renderRot(); show('cropper'); layoutCrop();
+}
+function renderRot() {
+  const b = cr.base, a = cr.fine * Math.PI / 180, cs = Math.abs(Math.cos(a)), sn = Math.abs(Math.sin(a));
+  const c = $('#cropCanvas'); c.width = Math.round(b.width * cs + b.height * sn); c.height = Math.round(b.width * sn + b.height * cs);
+  const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height);
+  x.translate(c.width / 2, c.height / 2); x.rotate(a); x.drawImage(b, -b.width / 2, -b.height / 2);
+}
+function rotateQuarter(dir) {
+  const b = cr.base, c = document.createElement('canvas'); c.width = b.height; c.height = b.width;
+  const x = c.getContext('2d'); x.translate(c.width / 2, c.height / 2); x.rotate(dir * Math.PI / 2); x.drawImage(b, -b.width / 2, -b.height / 2);
+  cr.base = c; cr.rect = { x: 0, y: 0, w: 1, h: 1 }; renderRot(); layoutCrop();
+}
+function layoutCrop() {
+  const r = cr.rect, s = $('#cropBox').style;
+  s.left = r.x * 100 + '%'; s.top = r.y * 100 + '%'; s.width = r.w * 100 + '%'; s.height = r.h * 100 + '%';
+}
+(() => {
+  const box = $('#cropBox');
+  for (const h of ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w']) { const d = document.createElement('div'); d.className = 'hd ' + h; d.dataset.h = h; box.appendChild(d); }
+  let st = null;
+  box.addEventListener('pointerdown', (e) => {
+    const r = $('#cropWrap').getBoundingClientRect();
+    st = { x: e.clientX, y: e.clientY, r: { ...cr.rect }, h: e.target.dataset.h || 'move', bw: r.width, bh: r.height };
+    box.setPointerCapture(e.pointerId); e.preventDefault();
+  });
+  box.addEventListener('pointermove', (e) => {
+    if (!st) return;
+    const dx = (e.clientX - st.x) / st.bw, dy = (e.clientY - st.y) / st.bh, o = st.r, n = { ...o };
+    const cl = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+    if (st.h === 'move') { n.x = cl(o.x + dx, 0, 1 - o.w); n.y = cl(o.y + dy, 0, 1 - o.h); }
+    else {
+      if (st.h.includes('w')) { n.x = cl(o.x + dx, 0, o.x + o.w - MINC); n.w = o.x + o.w - n.x; }
+      if (st.h.includes('e')) n.w = cl(o.w + dx, MINC, 1 - o.x);
+      if (st.h.includes('n')) { n.y = cl(o.y + dy, 0, o.y + o.h - MINC); n.h = o.y + o.h - n.y; }
+      if (st.h.includes('s')) n.h = cl(o.h + dy, MINC, 1 - o.y);
+    }
+    cr.rect = n; layoutCrop();
+  });
+  const end = () => { st = null; };
+  box.addEventListener('pointerup', end); box.addEventListener('pointercancel', end);
+})();
+function croppedCanvas() {
+  const src = $('#cropCanvas'), r = cr.rect, out = document.createElement('canvas');
+  out.width = Math.max(1, Math.round(r.w * src.width)); out.height = Math.max(1, Math.round(r.h * src.height));
+  out.getContext('2d').drawImage(src, Math.round(r.x * src.width), Math.round(r.y * src.height), out.width, out.height, 0, 0, out.width, out.height);
+  return out;
+}
+
+async function runScan(canvas) {
   if (typeof Tesseract === 'undefined') { toast('OCR engine could not load. Check your connection.'); return; }
   $('#loading').hidden = false; $('#loadBar').style.width = '0%'; $('#loadMsg').textContent = 'Preparing image…';
   try {
-    const canvas = await loadImage(file);
     const res = await Tesseract.recognize(canvas, 'nld', {
       logger: (m) => {
         if (m.status === 'recognizing text') { $('#loadMsg').textContent = 'Reading your text…'; $('#loadBar').style.width = Math.round(m.progress * 100) + '%'; }
@@ -345,7 +429,12 @@ function renderWords() {
 /* ---------- wiring ---------- */
 $('#btnCamera').onclick = () => $('#inCamera').click();
 $('#btnUpload').onclick = () => $('#inUpload').click();
-for (const id of ['#inCamera', '#inUpload']) $(id).onchange = (e) => { const f = e.target.files[0]; e.target.value = ''; scanFile(f); };
+for (const id of ['#inCamera', '#inUpload']) $(id).onchange = (e) => { const f = e.target.files[0]; e.target.value = ''; pickFile(f); };
+$('#cRotL').onclick = () => rotateQuarter(-1);
+$('#cRotR').onclick = () => rotateQuarter(1);
+$('#cFine').oninput = (e) => { cr.fine = parseFloat(e.target.value); renderRot(); };
+$('#cBack').onclick = $('#cCancel').onclick = () => { show('home'); renderHome(); };
+$('#cScan').onclick = () => runScan(croppedCanvas());
 $('#toWords').onclick = () => { tab = 'learning'; show('words'); renderWords(); };
 $('#wBack').onclick = () => { show('home'); renderHome(); };
 $('#rBack').onclick = () => { cur = null; show('home'); renderHome(); };
