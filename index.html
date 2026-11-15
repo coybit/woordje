@@ -444,7 +444,16 @@ $('#scrim').onclick = closeSheet;
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#sheet').hidden) closeSheet(); });
 $('#sSeg').onclick = (e) => { const b = e.target.closest('button'); if (b) changeStatus(b.dataset.st); };
 $('#sMain').onclick = () => { const st = statusOf(sheet.k); changeStatus(st === 'new' ? 'learning' : st === 'learning' ? 'learned' : 'learning'); };
-$('#sSpeak').onclick = () => { if (!('speechSynthesis' in window)) return toast('Speech is not supported on this device.'); const u = new SpeechSynthesisUtterance(sheet.k); u.lang = 'nl-NL'; speechSynthesis.cancel(); speechSynthesis.speak(u); };
+const dutchVoice = () => { const v = speechSynthesis.getVoices(); return v.find(x => /^nl[-_]NL/i.test(x.lang)) || v.find(x => /^nl/i.test(x.lang)) || v.find(x => /dutch|nederlands/i.test(x.name)); };
+$('#sSpeak').onclick = async () => {
+  if (!('speechSynthesis' in window)) return toast('Speech is not supported in this browser.');
+  if (!speechSynthesis.getVoices().length) await new Promise(r => { speechSynthesis.onvoiceschanged = r; setTimeout(r, 1200); });
+  const voice = dutchVoice();
+  if (!voice) return toast('No Dutch voice on this device. Add one in your system text-to-speech settings.');
+  const u = new SpeechSynthesisUtterance(sheet.k); u.voice = voice; u.lang = voice.lang;
+  u.onerror = (e) => toast('Could not play audio (' + (e.error || 'unknown') + ').');
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+};
 
 renderHome();
 </script>
