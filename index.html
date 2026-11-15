@@ -1,19 +1,363 @@
 <!doctype html>
-<html lang="nl">
+<html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F6F3EC">
 <title>Woordje</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:wght@500;600&display=swap" rel="stylesheet">
 <style>
-  body{margin:0;min-height:100vh;display:grid;place-items:center;background:#F6F3EC;color:#1D2330;font-family:system-ui,sans-serif;text-align:center}
-  h1{font-family:Georgia,serif;font-size:3rem;margin:0 0 .5rem}
-  p{margin:0;color:#4A5163}
+:root{--bg:#F6F3EC;--ink:#1D2330;--muted:#4A5163;--card:#fff;--new:#FFD08A;--new-b:#D9730D;--learn:#B9D2FF;--learn-b:#1F5FD1;--known:#2A8250;--seg:#E9E4D6}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;-webkit-text-size-adjust:100%}
+button{font-family:inherit;cursor:pointer}
+[hidden]{display:none!important}
+.view{max-width:520px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;padding:max(24px,env(safe-area-inset-top)) 20px max(24px,env(safe-area-inset-bottom))}
+h1,h2{font-family:Newsreader,Georgia,serif;font-weight:600;margin:0}
+.eyebrow{font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.btn{min-height:52px;border-radius:14px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:10px;padding:0 18px;width:100%}
+.btn.primary{background:var(--ink);color:#fff}
+.icon{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.iconbtn{width:44px;height:44px;border:0;background:transparent;color:var(--ink);display:flex;align-items:center;justify-content:center;border-radius:12px}
+.hero{margin:28px 0 20px}
+.hero h1{font-size:38px;line-height:1.1;margin-top:6px}
+.viewfinder{height:200px;border-radius:20px;background:#E4DED0;display:grid;place-items:center;text-align:center;padding:24px;position:relative;margin-bottom:20px;color:var(--muted);font-size:14px;line-height:1.4}
+.viewfinder:before{content:"";position:absolute;inset:18px;border:2px dashed #8C93A3;border-radius:12px}
+.viewfinder b{display:block;color:var(--ink);font-size:16px;margin:8px 0 4px}
+.stack{display:flex;flex-direction:column;gap:12px}
+.sect{display:flex;justify-content:space-between;align-items:baseline;margin:28px 0 10px;font-size:14px;font-weight:600}
+.linkbtn{border:0;background:none;color:#2457C5;font-weight:600;font-size:14px;min-height:44px;padding:0}
+.scanrow{display:flex;align-items:center;gap:12px;padding:10px;border-radius:14px;background:var(--card);width:100%;border:0;text-align:left;color:inherit;min-height:64px}
+.scanrow img{width:44px;height:56px;border-radius:6px;object-fit:cover;background:#FBF8F1;border:1px solid #D9D2C0}
+.scanrow .t{flex:1;display:flex;flex-direction:column;gap:2px;font-size:15px;font-weight:600}
+.scanrow .t span{font-size:13px;font-weight:400;color:var(--muted)}
+.empty{color:var(--muted);font-size:14px;padding:12px 0}
+.rtop{display:flex;align-items:center;gap:8px;margin:0 -8px}
+.rtop .title{flex:1;display:flex;flex-direction:column;min-width:0}
+.rtop .title b{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rtop .title span{font-size:12px;color:var(--muted)}
+.legend{display:flex;gap:8px;margin:6px 0 12px}
+.legend div{flex:1;display:flex;align-items:center;gap:8px;min-height:44px;padding:0 10px;border-radius:12px;background:var(--card);font-size:13px;font-weight:600;white-space:nowrap}
+.legend small{font-weight:500;color:var(--muted);font-size:13px}
+.sw{width:14px;height:14px;border-radius:4px;flex:none;background:var(--new);box-shadow:inset 0 0 0 1.5px var(--new-b)}
+.sw.learning{background:var(--learn);box-shadow:inset 0 0 0 1.5px var(--learn-b)}
+.sw.learned{background:#FBF8F1;box-shadow:inset 0 -3px 0 var(--known)}
+.stagewrap{flex:1;background:#8F8878;border-radius:18px;overflow:auto;padding:10px;max-height:calc(100dvh - 240px);min-height:300px}
+.stage{position:relative;width:100%;line-height:0}
+.stage img{width:100%;height:auto;display:block;border-radius:6px}
+.wb{position:absolute;padding:0;margin:0;border:0;border-radius:4px;background:transparent}
+.wb.new{background:rgba(255,208,138,.55);box-shadow:inset 0 0 0 1.5px var(--new-b)}
+.wb.learning{background:rgba(185,210,255,.6);box-shadow:inset 0 0 0 1.5px var(--learn-b)}
+.wb.learned{box-shadow:inset 0 -2.5px 0 var(--known)}
+.wb.sel{outline:2.5px solid var(--ink);outline-offset:1px}
+.hint{text-align:center;color:var(--muted);font-size:13px;margin:10px 0 0}
+.seg{display:flex;gap:6px;padding:4px;border-radius:14px;background:var(--seg)}
+.seg button{flex:1;min-height:44px;border:0;border-radius:10px;background:transparent;color:#3B4256;font-size:14px;font-weight:600}
+.seg button[aria-pressed=true].learning{background:var(--learn);box-shadow:inset 0 0 0 1.5px var(--learn-b);color:var(--ink)}
+.seg button[aria-pressed=true].learned{background:#CFE8D8;box-shadow:inset 0 0 0 1.5px var(--known);color:var(--ink)}
+.seg button[aria-pressed=true].new{background:var(--new);box-shadow:inset 0 0 0 1.5px var(--new-b);color:var(--ink)}
+.cards{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.card{display:flex;align-items:center;gap:12px;padding:14px;border-radius:16px;background:var(--card)}
+.card .tx{flex:1;min-width:0;text-align:left;border:0;background:none;color:inherit;padding:0;display:flex;flex-direction:column;gap:2px}
+.card .tx b{font-family:Newsreader,serif;font-size:22px;font-weight:600}
+.card .tx span{font-size:14px;color:#3B4256}
+.card .tx small{font-size:12px;color:var(--muted)}
+.card .act{min-height:44px;padding:0 14px;border:0;border-radius:12px;background:var(--known);color:#fff;font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px}
+.card .act.alt{background:var(--seg);color:var(--ink)}
+#scrim{position:fixed;inset:0;background:rgba(29,35,48,.4);z-index:10}
+#sheet{position:fixed;left:0;right:0;bottom:0;z-index:11;max-width:520px;margin:0 auto;background:#fff;border-radius:24px 24px 0 0;box-shadow:0 -8px 30px rgba(0,0,0,.18);padding:12px 24px max(28px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:16px;max-height:88dvh;overflow:auto}
+.grab{align-self:center;width:40px;height:5px;border-radius:3px;background:#C9CCD4}
+.shead{display:flex;align-items:flex-start;gap:12px}
+.shead .w{flex:1}
+.shead h2{font-size:34px;line-height:1.1;word-break:break-word}
+.shead .pos{font-size:14px;color:var(--muted);margin-top:4px}
+.speak{width:48px;height:48px;border-radius:50%;border:0;background:#EEF1F8;display:grid;place-items:center;color:var(--ink)}
+.lbl{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.defs{margin:0;padding-left:18px;font-size:15px;line-height:1.45}
+.defs li{margin-bottom:4px}
+.defs .p{list-style:none;margin:8px 0 2px -18px;font-size:13px;font-weight:600;color:var(--muted)}
+.ctx{padding:12px 14px;border-radius:12px;background:var(--bg);font-family:Newsreader,serif;font-size:17px;line-height:1.45}
+.ctx b{font-weight:600;background:var(--new)}
+#loading{position:fixed;inset:0;z-index:20;background:rgba(246,243,236,.94);display:grid;place-items:center;text-align:center;padding:24px}
+.bar{width:220px;height:8px;border-radius:4px;background:var(--seg);margin:14px auto 0;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--ink);transition:width .2s}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:30;background:rgba(29,35,48,.94);color:#fff;font-size:14px;padding:10px 16px;border-radius:999px;max-width:90vw}
 </style>
 </head>
 <body>
-  <main>
-    <h1>Woordje</h1>
-    <p>Read Dutch. Learn every word. Coming soon.</p>
-  </main>
+
+<main class="view" id="home">
+  <div class="hero">
+    <div class="eyebrow">Woordje</div>
+    <h1>Read anything.<br>Learn every word.</h1>
+  </div>
+  <div class="viewfinder"><div><svg class="icon" style="width:40px;height:40px" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg><b>Frame the printed text</b>Good light, flat page, one paragraph or a whole page.</div></div>
+  <div class="stack">
+    <button class="btn primary" id="btnCamera"><svg class="icon" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg>Take a photo</button>
+    <button class="btn" id="btnUpload"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 9"/></svg>Upload from gallery</button>
+  </div>
+  <input type="file" id="inCamera" accept="image/*" capture="environment" hidden>
+  <input type="file" id="inUpload" accept="image/*" hidden>
+  <div class="sect"><span>Recent scans</span><button class="linkbtn" id="toWords">My words</button></div>
+  <div class="stack" id="scanList"></div>
+</main>
+
+<main class="view" id="reader" hidden>
+  <div class="rtop">
+    <button class="iconbtn" id="rBack" aria-label="Back"><svg class="icon" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div class="title"><b id="rTitle"></b><span id="rSub"></span></div>
+    <button class="iconbtn" id="rDelete" aria-label="Delete this scan"><svg class="icon" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button>
+  </div>
+  <div class="legend">
+    <div><span class="sw"></span>New <small id="cNew">0</small></div>
+    <div><span class="sw learning"></span>Learning <small id="cLearning">0</small></div>
+    <div><span class="sw learned"></span>Known <small id="cLearned">0</small></div>
+  </div>
+  <div class="stagewrap"><div class="stage" id="stage"></div></div>
+  <p class="hint">Tap any word to see its meaning</p>
+</main>
+
+<main class="view" id="words" hidden>
+  <div class="rtop" style="margin-bottom:12px">
+    <button class="iconbtn" id="wBack" aria-label="Back"><svg class="icon" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <h2 style="font-size:30px">My words</h2>
+  </div>
+  <div class="seg" id="wTabs">
+    <button class="learning" data-tab="learning" aria-pressed="true">Learning</button>
+    <button class="learned" data-tab="learned" aria-pressed="false">Learned</button>
+  </div>
+  <div class="cards" id="wList"></div>
+</main>
+
+<div id="scrim" hidden></div>
+<section id="sheet" role="dialog" aria-modal="true" aria-labelledby="sWord" hidden>
+  <div class="grab"></div>
+  <div class="shead">
+    <div class="w"><h2 id="sWord"></h2><div class="pos" id="sPos"></div></div>
+    <button class="speak" id="sSpeak" aria-label="Hear pronunciation"><svg class="icon" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg></button>
+  </div>
+  <div><div class="lbl">Meaning</div><div id="sMeaning"></div></div>
+  <div id="sCtxWrap"><div class="lbl">In your text</div><div class="ctx" id="sCtx"></div></div>
+  <div>
+    <div class="lbl">Your progress</div>
+    <div class="seg" id="sSeg">
+      <button class="new" data-st="new">New</button>
+      <button class="learning" data-st="learning">Learning</button>
+      <button class="learned" data-st="learned">Learned</button>
+    </div>
+  </div>
+  <button class="btn primary" id="sMain"></button>
+</section>
+
+<div id="loading" hidden><div><div id="loadMsg" style="font-weight:600">Reading your text…</div><div class="bar"><i id="loadBar"></i></div></div></div>
+<div id="toast" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+<script>
+'use strict';
+const $ = (s) => document.querySelector(s);
+const LS_WORDS = 'woordje.words', LS_DICT = 'woordje.dict';
+
+/* ---------- storage ---------- */
+const lsGet = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+let saved = lsGet(LS_WORDS, {});          // key -> {status, added, scan}
+let dict = lsGet(LS_DICT, {});            // key -> {pos:[{p,defs:[]}]} | {none:true}
+
+const db = (() => {
+  let p;
+  const open = () => p || (p = new Promise((res, rej) => {
+    const r = indexedDB.open('woordje', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('scans', { keyPath: 'id' });
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  }));
+  const tx = async (mode, fn) => { const d = await open(); return new Promise((res, rej) => { const t = d.transaction('scans', mode); const q = fn(t.objectStore('scans')); t.oncomplete = () => res(q && q.result); t.onerror = () => rej(t.error); }); };
+  return { all: () => tx('readonly', s => s.getAll()), put: (v) => tx('readwrite', s => s.put(v)), del: (id) => tx('readwrite', s => s.delete(id)) };
+})();
+
+/* ---------- helpers ---------- */
+const keyOf = (t) => t.toLowerCase().replace(/^[^\p{L}]+|[^\p{L}]+$/gu, '');
+const statusOf = (k) => (saved[k] && saved[k].status) || 'new';
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 2600); }
+function show(id) { for (const v of document.querySelectorAll('.view')) v.hidden = v.id !== id; window.scrollTo(0, 0); }
+function setStatus(k, st, scanTitle) {
+  if (st === 'new') delete saved[k];
+  else saved[k] = { status: st, added: (saved[k] && saved[k].added) || Date.now(), scan: (saved[k] && saved[k].scan) || scanTitle || '' };
+  lsSet(LS_WORDS, saved);
+}
+
+/* ---------- dictionary (Wiktionary: English definitions of Dutch words) ---------- */
+const strip = (h) => { const d = document.createElement('div'); d.innerHTML = h; return d.textContent.replace(/\s+/g, ' ').trim(); };
+async function lookup(k) {
+  if (dict[k]) return dict[k].none ? null : dict[k];
+  let result = null;
+  for (const w of [k, k.charAt(0).toUpperCase() + k.slice(1)]) {
+    try {
+      const r = await fetch('https://en.wiktionary.org/api/rest_v1/page/definition/' + encodeURIComponent(w));
+      if (!r.ok) continue;
+      const j = await r.json();
+      const entries = (j.nl || []).map(e => ({ p: e.partOfSpeech, defs: (e.definitions || []).map(d => strip(d.definition)).filter(Boolean).slice(0, 3) })).filter(e => e.defs.length).slice(0, 3);
+      if (entries.length) { result = { pos: entries }; break; }
+    } catch { return undefined; }              // offline: don't cache
+  }
+  dict[k] = result || { none: true }; lsSet(LS_DICT, dict);
+  return result;
+}
+const shortMeaning = (d) => d && d.pos && d.pos[0] ? d.pos[0].defs[0] : '';
+
+/* ---------- OCR ---------- */
+async function loadImage(file) {
+  let bmp;
+  try { bmp = await createImageBitmap(file, { imageOrientation: 'from-image' }); }
+  catch { bmp = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = URL.createObjectURL(file); }); }
+  const w0 = bmp.width, h0 = bmp.height, s = Math.min(1, 2000 / Math.max(w0, h0));
+  const c = document.createElement('canvas'); c.width = Math.round(w0 * s); c.height = Math.round(h0 * s);
+  c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+  return c;
+}
+async function scanFile(file) {
+  if (!file) return;
+  if (typeof Tesseract === 'undefined') { toast('OCR engine could not load. Check your connection.'); return; }
+  $('#loading').hidden = false; $('#loadBar').style.width = '0%'; $('#loadMsg').textContent = 'Preparing image…';
+  try {
+    const canvas = await loadImage(file);
+    const res = await Tesseract.recognize(canvas, 'nld', {
+      logger: (m) => {
+        if (m.status === 'recognizing text') { $('#loadMsg').textContent = 'Reading your text…'; $('#loadBar').style.width = Math.round(m.progress * 100) + '%'; }
+        else if (/loading/.test(m.status)) $('#loadMsg').textContent = 'Loading Dutch language data…';
+      }
+    });
+    const d = res.data;
+    let raw = d.words;
+    if (!raw && d.blocks) raw = d.blocks.flatMap(b => b.paragraphs.flatMap(p => p.lines.flatMap(l => l.words)));
+    const pad = 2;
+    const words = (raw || []).filter(w => w.confidence > 30).map(w => ({ t: w.text, k: keyOf(w.text), x0: Math.max(0, w.bbox.x0 - pad), y0: Math.max(0, w.bbox.y0 - pad), x1: Math.min(canvas.width, w.bbox.x1 + pad), y1: Math.min(canvas.height, w.bbox.y1 + pad) })).filter(w => w.k.length > 0);
+    if (!words.length) { toast('No text found. Try a closer, brighter photo.'); return; }
+    const now = new Date();
+    const scan = { id: String(now.getTime()), title: now.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) + ' · ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), date: now.getTime(), img: canvas.toDataURL('image/jpeg', 0.78), w: canvas.width, h: canvas.height, words };
+    await db.put(scan);
+    openReader(scan);
+  } catch (e) { console.error(e); toast('Something went wrong while scanning.'); }
+  finally { $('#loading').hidden = true; }
+}
+
+/* ---------- home ---------- */
+async function renderHome() {
+  const list = $('#scanList'); list.textContent = '';
+  let scans = []; try { scans = (await db.all()).sort((a, b) => b.date - a.date); } catch {}
+  if (!scans.length) { list.innerHTML = '<div class="empty">No scans yet. Take a photo of a Dutch text to begin.</div>'; return; }
+  for (const s of scans) {
+    const b = document.createElement('button'); b.className = 'scanrow';
+    const uniq = new Set(s.words.map(w => w.k)); const nNew = [...uniq].filter(k => statusOf(k) === 'new').length;
+    b.innerHTML = '<img alt=""><div class="t"></div>';
+    b.querySelector('img').src = s.img;
+    const t = b.querySelector('.t'); t.textContent = s.title; const sp = document.createElement('span'); sp.textContent = uniq.size + ' words · ' + nNew + ' new'; t.appendChild(sp);
+    b.onclick = () => openReader(s); list.appendChild(b);
+  }
+}
+
+/* ---------- reader ---------- */
+let cur = null, selectedBtn = null;
+function openReader(scan) {
+  cur = scan; show('reader');
+  $('#rTitle').textContent = scan.title;
+  const stage = $('#stage'); stage.textContent = '';
+  const img = new Image(); img.alt = 'Scanned text'; img.src = scan.img; stage.appendChild(img);
+  scan.words.forEach((w, i) => {
+    const b = document.createElement('button'); b.className = 'wb'; b.dataset.i = i; b.setAttribute('aria-label', w.t);
+    b.style.left = (w.x0 / scan.w * 100) + '%'; b.style.top = (w.y0 / scan.h * 100) + '%';
+    b.style.width = ((w.x1 - w.x0) / scan.w * 100) + '%'; b.style.height = ((w.y1 - w.y0) / scan.h * 100) + '%';
+    b.onclick = () => { if (selectedBtn) selectedBtn.classList.remove('sel'); selectedBtn = b; b.classList.add('sel'); openSheet(w.k, contextFor(scan, i), scan.title); };
+    stage.appendChild(b);
+  });
+  paintReader();
+}
+function paintReader() {
+  if (!cur) return;
+  const c = { new: 0, learning: 0, learned: 0 };
+  document.querySelectorAll('#stage .wb').forEach(b => { const st = statusOf(cur.words[b.dataset.i].k); b.classList.remove('new', 'learning', 'learned'); b.classList.add(st); c[st]++; });
+  $('#cNew').textContent = c.new; $('#cLearning').textContent = c.learning; $('#cLearned').textContent = c.learned;
+  $('#rSub').textContent = cur.words.length + ' words';
+}
+function contextFor(scan, i) {
+  const toks = scan.words.map(w => w.t); let a = i, b = i;
+  while (a > 0 && !/[.!?]$/.test(toks[a - 1])) a--;
+  while (b < toks.length - 1 && !/[.!?]$/.test(toks[b])) b++;
+  return { before: toks.slice(a, i).join(' '), word: toks[i], after: toks.slice(i + 1, b + 1).join(' ') };
+}
+
+/* ---------- sheet ---------- */
+let sheet = { k: '', scan: '' };
+async function openSheet(k, ctx, scanTitle) {
+  sheet = { k, scan: scanTitle || '' };
+  $('#sWord').textContent = k; $('#sPos').textContent = '';
+  $('#sMeaning').textContent = 'Looking up…';
+  const cw = $('#sCtxWrap');
+  if (ctx) { cw.hidden = false; const c = $('#sCtx'); c.textContent = ''; c.append(ctx.before + ' ', Object.assign(document.createElement('b'), { textContent: ctx.word }), ' ' + ctx.after); } else cw.hidden = true;
+  paintSheet(); $('#scrim').hidden = false; $('#sheet').hidden = false;
+  const d = await lookup(k);
+  if (sheet.k !== k) return;
+  const m = $('#sMeaning'); m.textContent = '';
+  if (d === undefined) { m.textContent = 'You seem to be offline. Meanings need a connection.'; return; }
+  if (!d) {
+    m.append('No definition found for this form. ');
+    const a = document.createElement('a'); a.href = 'https://translate.google.com/?sl=nl&tl=en&text=' + encodeURIComponent(k); a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Try a translator'; a.style.color = '#2457C5'; m.appendChild(a); return;
+  }
+  $('#sPos').textContent = d.pos.map(e => e.p).join(' · ').toLowerCase();
+  const ul = document.createElement('ul'); ul.className = 'defs';
+  for (const e of d.pos) {
+    if (d.pos.length > 1) { const h = document.createElement('li'); h.className = 'p'; h.textContent = e.p; ul.appendChild(h); }
+    for (const t of e.defs) { const li = document.createElement('li'); li.textContent = t; ul.appendChild(li); }
+  }
+  m.appendChild(ul);
+}
+function paintSheet() {
+  const st = statusOf(sheet.k);
+  document.querySelectorAll('#sSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.st === st));
+  $('#sMain').textContent = st === 'new' ? 'Add to my words to learn' : st === 'learning' ? 'Mark as learned' : 'Move back to learning';
+}
+function closeSheet() { $('#sheet').hidden = true; $('#scrim').hidden = true; if (selectedBtn) { selectedBtn.classList.remove('sel'); selectedBtn = null; } }
+function changeStatus(st) { setStatus(sheet.k, st, sheet.scan); paintSheet(); paintReader(); if (!$('#words').hidden) renderWords(); }
+
+/* ---------- words list ---------- */
+let tab = 'learning';
+function renderWords() {
+  document.querySelectorAll('#wTabs button').forEach(b => b.setAttribute('aria-pressed', b.dataset.tab === tab));
+  const keys = Object.keys(saved).filter(k => saved[k].status === tab).sort((a, b) => saved[b].added - saved[a].added);
+  const list = $('#wList'); list.textContent = '';
+  if (!keys.length) { list.innerHTML = '<div class="empty">' + (tab === 'learning' ? 'Nothing here yet. Tap a word in a scan and add it to learn.' : 'Words you mark as learned appear here.') + '</div>'; return; }
+  for (const k of keys) {
+    const c = document.createElement('div'); c.className = 'card';
+    const tx = document.createElement('button'); tx.className = 'tx'; tx.innerHTML = '<b></b><span></span><small></small>';
+    tx.querySelector('b').textContent = k; tx.querySelector('small').textContent = saved[k].scan ? 'from ' + saved[k].scan : '';
+    const sp = tx.querySelector('span'); sp.textContent = shortMeaning(dict[k]) || '…';
+    if (!dict[k]) lookup(k).then(d => { sp.textContent = shortMeaning(d) || 'No definition found'; });
+    tx.onclick = () => openSheet(k, null, saved[k].scan);
+    const act = document.createElement('button'); act.className = 'act' + (tab === 'learned' ? ' alt' : '');
+    if (tab !== 'learned') act.innerHTML = '<svg class="icon" style="width:16px;height:16px;stroke-width:2.4" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>';
+    act.append(tab === 'learned' ? 'Learn again' : 'Learned');
+    act.onclick = () => { setStatus(k, tab === 'learned' ? 'learning' : 'learned', saved[k].scan); renderWords(); };
+    c.append(tx, act); list.appendChild(c);
+  }
+}
+
+/* ---------- wiring ---------- */
+$('#btnCamera').onclick = () => $('#inCamera').click();
+$('#btnUpload').onclick = () => $('#inUpload').click();
+for (const id of ['#inCamera', '#inUpload']) $(id).onchange = (e) => { const f = e.target.files[0]; e.target.value = ''; scanFile(f); };
+$('#toWords').onclick = () => { tab = 'learning'; show('words'); renderWords(); };
+$('#wBack').onclick = () => { show('home'); renderHome(); };
+$('#rBack').onclick = () => { cur = null; show('home'); renderHome(); };
+$('#rDelete').onclick = async () => { if (cur && confirm('Delete this scan? Your saved words are kept.')) { await db.del(cur.id); cur = null; show('home'); renderHome(); } };
+$('#wTabs').onclick = (e) => { const b = e.target.closest('button'); if (b) { tab = b.dataset.tab; renderWords(); } };
+$('#scrim').onclick = closeSheet;
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#sheet').hidden) closeSheet(); });
+$('#sSeg').onclick = (e) => { const b = e.target.closest('button'); if (b) changeStatus(b.dataset.st); };
+$('#sMain').onclick = () => { const st = statusOf(sheet.k); changeStatus(st === 'new' ? 'learning' : st === 'learning' ? 'learned' : 'learning'); };
+$('#sSpeak').onclick = () => { if (!('speechSynthesis' in window)) return toast('Speech is not supported on this device.'); const u = new SpeechSynthesisUtterance(sheet.k); u.lang = 'nl-NL'; speechSynthesis.cancel(); speechSynthesis.speak(u); };
+
+renderHome();
+</script>
 </body>
 </html>
