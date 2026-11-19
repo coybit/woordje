@@ -124,6 +124,16 @@ body.typing #vInf{font-size:30px}
 .tico{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;color:var(--ink)}
 .tico.scan{background:var(--new)}
 .tico.verbs{background:var(--learn)}
+.vprog{display:flex;align-items:center;gap:10px}
+.vbar{flex:1;height:8px;border-radius:4px;background:var(--seg);overflow:hidden}
+.vbar i{display:block;height:100%;width:0;background:var(--known);border-radius:4px;transition:width .25s}
+#vProgTxt{font-size:12px;font-weight:600;color:var(--muted);min-width:44px;text-align:right}
+#vQuiz{display:flex;flex-direction:column;gap:12px}
+body.typing #vQuiz{gap:8px}
+#vDoneScore{font-family:Newsreader,Georgia,serif;font-size:32px;font-weight:600;line-height:1.15;margin-bottom:8px}
+#vDoneMissed{font-size:14px;line-height:1.6;color:var(--ink)}
+#vDoneMissed div{padding:6px 0;border-top:1px solid #E7E2D3}
+#vDoneMissed small{color:var(--muted)}
 #scrim{position:fixed;inset:0;background:rgba(29,35,48,.4);z-index:10}
 #sheet{position:fixed;left:0;right:0;bottom:0;z-index:11;max-width:520px;margin:0 auto;background:#fff;border-radius:24px 24px 0 0;box-shadow:0 -8px 30px rgba(0,0,0,.18);padding:12px 24px max(28px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:16px;max-height:88dvh;overflow:auto}
 .grab{align-self:center;width:40px;height:5px;border-radius:3px;background:#C9CCD4}
@@ -186,6 +196,8 @@ body.typing #vInf{font-size:30px}
   <div id="vPractice">
     <div class="chips" id="vChips"></div>
     <div class="vcard">
+      <div class="vprog"><div class="vbar" role="progressbar" aria-label="Round progress" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0" id="vBarWrap"><i id="vProgBar"></i></div><span id="vProgTxt">0 / 10</span></div>
+      <div id="vQuiz">
       <div id="vEn"></div>
       <div id="vInf"></div>
       <div id="vPrompt"></div>
@@ -196,6 +208,13 @@ body.typing #vInf{font-size:30px}
       <div class="hintline"><button class="linkbtn" id="vHint" type="button">Hint</button><span id="vHintText" aria-live="polite"></span><button class="linkbtn skip" id="vSkip" type="button">Skip</button></div>
       <div id="vFeedback" role="status"></div>
       <div id="vTable"></div>
+      </div>
+      <div id="vDone" hidden>
+        <div class="lbl">Round complete</div>
+        <div id="vDoneScore"></div>
+        <div id="vDoneMissed"></div>
+        <button class="btn primary" id="vAgain" style="margin-top:12px">Another round</button>
+      </div>
     </div>
     <p class="hint" id="vStat"></p>
   </div>

@@ -292,7 +292,8 @@ function verbTable(v) {
 }
 
 /* ---------- practice ---------- */
-const vState = { skipped: 0, hint: 0, on: new Set(TENSES.map(t => t.id)), q: null, answered: false, right: 0, total: 0, last: '' };
+const ROUND = 10;
+const vState = { rn: 0, rr: 0, missed: [], skipped: 0, hint: 0, on: new Set(TENSES.map(t => t.id)), q: null, answered: false, right: 0, total: 0, last: '' };
 function pickQuestion() {
   const cands = [];
   for (const v of VERBS) for (const t of TENSES) {
@@ -329,7 +330,19 @@ function showHint() {
   $('#vHint').textContent = vState.hint < 3 ? 'More' : 'Hint'; $('#vHint').disabled = vState.hint >= 3;
 }
 
+function vProg() { $('#vProgBar').style.width = (vState.rn / ROUND * 100) + '%'; $('#vProgTxt').textContent = vState.rn + ' / ' + ROUND; $('#vBarWrap').setAttribute('aria-valuenow', vState.rn); }
+function showDone() {
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  $('#vQuiz').hidden = true; $('#vDone').hidden = false;
+  const r = vState.rr; $('#vDoneScore').textContent = r + ' of ' + ROUND + ' correct';
+  const box = $('#vDoneMissed'); box.textContent = '';
+  if (!vState.missed.length) { box.textContent = 'No mistakes. Well done!'; return; }
+  const h = document.createElement('div'); h.style.borderTop = '0'; h.textContent = 'To review:'; h.style.fontWeight = '600'; box.appendChild(h);
+  for (const m of vState.missed) { const d = document.createElement('div'); d.append(m.answer + ' '); const sm = document.createElement('small'); sm.textContent = '(' + m.inf + ', ' + T_LABEL[m.t].toLowerCase() + ')'; d.appendChild(sm); box.appendChild(d); }
+}
+function newRound() { vState.rn = 0; vState.rr = 0; vState.missed = []; $('#vDone').hidden = true; $('#vQuiz').hidden = false; nextQuestion(); }
 function nextQuestion(keepFocus) {
+  if (vState.rn >= ROUND) { showDone(); return; }
   const q = pickQuestion(); vState.q = q; vState.answered = false; vState.hint = 0;
   $('#vHintText').textContent = ''; $('#vHint').textContent = 'Hint'; $('#vHint').disabled = false; $('.hintline').hidden = false;
   $('#vFeedback').textContent = ''; $('#vFeedback').className = ''; $('#vTable').textContent = '';
@@ -342,7 +355,7 @@ function nextQuestion(keepFocus) {
   const subj = document.createElement('span'); subj.className = 'subj'; subj.textContent = SUBJ[q.i] + ' ';
   const blank = document.createElement('span'); blank.className = 'blank'; blank.textContent = '…';
   $('#vPrompt').append(chip, document.createElement('br'), subj, blank);
-  vStat(); if (keepFocus) inp.focus({ preventScroll: true });
+  vStat(); vProg(); if (keepFocus) inp.focus({ preventScroll: true });
 }
 function checkAnswer() {
   const q = vState.q; if (!q) return;
@@ -350,11 +363,12 @@ function checkAnswer() {
   const acc = accepted(q.v, q.t, q.i), ok = acc.some(a => normA(a) === val);
   const hinted = vState.hint > 0; vRecord(q.v.inf, q.t, ok && !hinted); vState.total++; if (ok && !hinted) vState.right++;
   $('.hintline').hidden = true;
+  vState.rn++; if (ok && !hinted) vState.rr++; else vState.missed.push({ inf: q.v.inf, t: q.t, answer: SUBJ[q.i] + ' ' + acc[0] }); vProg();
   vState.answered = true; $('#vInput').className = ok ? 'ok' : 'bad';
   const fb = $('#vFeedback'); fb.className = ok ? 'ok' : 'bad';
   fb.textContent = ok ? (hinted ? 'Correct, with a hint. It will come back soon. ' : 'Correct! ') + SUBJ[q.i] + ' ' + acc[0] : 'Not quite. ' + SUBJ[q.i] + ' ' + acc.join(' / ');
   $('#vTable').textContent = ''; $('#vTable').appendChild(verbTable(q.v));
-  $('#vBtn').textContent = 'Next'; vStat();
+  $('#vBtn').textContent = vState.rn >= ROUND ? 'Finish' : 'Next'; vStat();
 }
 
 /* ---------- browse ---------- */
@@ -393,6 +407,7 @@ $('#vTabs').onclick = (e) => {
 $('#vSearch').oninput = renderBrowse;
 for (const id of ['#vBtn', '#vHint', '#vSkip']) $(id).addEventListener('pointerdown', (e) => e.preventDefault());
 $('#vHint').onclick = showHint;
+$('#vAgain').onclick = newRound;
 $('#vSkip').onclick = () => { if (!vState.q || vState.answered) return; vState.skipped++; nextQuestion(document.body.classList.contains('typing')); };   // keep the keyboard open
 $('#vBtn').onclick = () => vState.answered ? nextQuestion(true) : checkAnswer();
 $('#vInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); vState.answered ? nextQuestion(true) : checkAnswer(); } });
