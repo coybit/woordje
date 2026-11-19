@@ -292,7 +292,7 @@ function verbTable(v) {
 }
 
 /* ---------- practice ---------- */
-const vState = { on: new Set(TENSES.map(t => t.id)), q: null, answered: false, right: 0, total: 0, last: '' };
+const vState = { hint: 0, on: new Set(TENSES.map(t => t.id)), q: null, answered: false, right: 0, total: 0, last: '' };
 function pickQuestion() {
   const cands = [];
   for (const v of VERBS) for (const t of TENSES) {
@@ -311,8 +311,27 @@ function pickQuestion() {
   const c = cands[0]; vState.last = c.v.inf; return { v: c.v, t: c.t, i: 0 };
 }
 function vStat() { $('#vStat').textContent = vState.total ? vState.right + ' of ' + vState.total + ' correct this session' : VERBS.length + ' verbs · type the form and press Check'; }
+/* ---------- hints ---------- */
+function hintClue(q) {
+  const v = q.v, regular = /(te|de)$/.test(v.sg) && v.pl === v.sg + 'n';
+  if (q.t === 'present') return v.ov ? 'Irregular present tense.' : q.i === 3 ? 'Same as the infinitive.' : q.i === 0 ? 'The stem: drop -en (mind the spelling).' : 'The stem + t.';
+  if (q.t === 'imperfect') return (regular ? 'Regular: stem + te/de' : 'Irregular: the vowel changes') + (q.i === 3 ? ', plural ends in -en.' : '.');
+  const helper = v.aux[0] === 'h' ? 'hebben' : 'zijn';
+  return 'Helper verb from ' + helper + ' + ' + (regular ? 'regular participle (ge- + stem + t/d).' : 'irregular participle.');
+}
+function hintPattern(word, upto) { return word.split(' ').map(w => { const k = Math.min(w.length, upto === 1 ? 1 : Math.ceil(w.length / 2)); return w.slice(0, k) + '_'.repeat(w.length - k); }).join('  '); }
+function showHint() {
+  const q = vState.q; if (!q || vState.answered) return;
+  vState.hint = Math.min(3, vState.hint + 1);
+  const t = $('#vHintText'); t.textContent = '';
+  if (vState.hint === 1) t.textContent = hintClue(q);
+  else { t.append(hintClue(q) + ' '); const b = document.createElement('b'); b.textContent = hintPattern(accepted(q.v, q.t, q.i)[0], vState.hint - 1); t.append(document.createElement('br'), b); }
+  $('#vHint').textContent = vState.hint < 3 ? 'More' : 'Hint'; $('#vHint').disabled = vState.hint >= 3;
+}
+
 function nextQuestion(keepFocus) {
-  const q = pickQuestion(); vState.q = q; vState.answered = false;
+  const q = pickQuestion(); vState.q = q; vState.answered = false; vState.hint = 0;
+  $('#vHintText').textContent = ''; $('#vHint').textContent = 'Hint'; $('#vHint').disabled = false; $('.hintline').hidden = false;
   $('#vFeedback').textContent = ''; $('#vFeedback').className = ''; $('#vTable').textContent = '';
   const inp = $('#vInput'); inp.value = ''; inp.disabled = false; inp.className = '';
   if (!q) { $('#vEn').textContent = ''; $('#vInf').textContent = 'Pick at least one tense'; $('#vPrompt').textContent = ''; $('#vBtn').disabled = true; return; }
@@ -329,10 +348,11 @@ function checkAnswer() {
   const q = vState.q; if (!q) return;
   const val = normA($('#vInput').value); if (!val) return;
   const acc = accepted(q.v, q.t, q.i), ok = acc.some(a => normA(a) === val);
-  vRecord(q.v.inf, q.t, ok); vState.total++; if (ok) vState.right++;
+  const hinted = vState.hint > 0; vRecord(q.v.inf, q.t, ok && !hinted); vState.total++; if (ok && !hinted) vState.right++;
+  $('.hintline').hidden = true;
   vState.answered = true; $('#vInput').className = ok ? 'ok' : 'bad';
   const fb = $('#vFeedback'); fb.className = ok ? 'ok' : 'bad';
-  fb.textContent = ok ? 'Correct! ' + SUBJ[q.i] + ' ' + acc[0] : 'Not quite. ' + SUBJ[q.i] + ' ' + acc.join(' / ');
+  fb.textContent = ok ? (hinted ? 'Correct, with a hint. It will come back soon. ' : 'Correct! ') + SUBJ[q.i] + ' ' + acc[0] : 'Not quite. ' + SUBJ[q.i] + ' ' + acc.join(' / ');
   $('#vTable').textContent = ''; $('#vTable').appendChild(verbTable(q.v));
   $('#vBtn').textContent = 'Next'; vStat();
 }
@@ -370,6 +390,7 @@ $('#vTabs').onclick = (e) => {
   if (b.dataset.vt === 'browse') renderBrowse();
 };
 $('#vSearch').oninput = renderBrowse;
-$('#vBtn').addEventListener('pointerdown', (e) => e.preventDefault());   // keep the keyboard open
+for (const id of ['#vBtn', '#vHint']) $(id).addEventListener('pointerdown', (e) => e.preventDefault());
+$('#vHint').onclick = showHint;   // keep the keyboard open
 $('#vBtn').onclick = () => vState.answered ? nextQuestion(true) : checkAnswer();
 $('#vInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); vState.answered ? nextQuestion(true) : checkAnswer(); } });

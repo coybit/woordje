@@ -109,6 +109,11 @@ body.typing #verbs #vTabs,body.typing #verbs #vChips,body.typing #verbs #vStat,b
 body.typing #verbs{padding-top:10px}
 body.typing #verbs .vcard{padding:14px;gap:8px}
 body.typing #vInf{font-size:30px}
+.hintline{display:flex;align-items:center;gap:10px;margin:-4px 0 -2px;flex-wrap:wrap}
+.hintline .linkbtn{padding:0 4px;min-height:40px}
+.hintline .linkbtn:disabled{color:var(--muted);opacity:.6}
+#vHintText{font-size:14px;line-height:1.4;color:var(--ink)}
+#vHintText b{font-family:ui-monospace,Menlo,monospace;letter-spacing:.12em;font-size:16px}
 #scrim{position:fixed;inset:0;background:rgba(29,35,48,.4);z-index:10}
 #sheet{position:fixed;left:0;right:0;bottom:0;z-index:11;max-width:520px;margin:0 auto;background:#fff;border-radius:24px 24px 0 0;box-shadow:0 -8px 30px rgba(0,0,0,.18);padding:12px 24px max(28px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:16px;max-height:88dvh;overflow:auto}
 .grab{align-self:center;width:40px;height:5px;border-radius:3px;background:#C9CCD4}
@@ -168,6 +173,7 @@ body.typing #vInf{font-size:30px}
         <input id="vInput" type="text" aria-label="Your answer" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done">
         <button class="btn primary" id="vBtn">Check</button>
       </div>
+      <div class="hintline"><button class="linkbtn" id="vHint" type="button">Hint</button><span id="vHintText" aria-live="polite"></span></div>
       <div id="vFeedback" role="status"></div>
       <div id="vTable"></div>
     </div>
