@@ -311,7 +311,7 @@ function pickQuestion() {
   const c = cands[0]; vState.last = c.v.inf; return { v: c.v, t: c.t, i: 0 };
 }
 function vStat() { $('#vStat').textContent = vState.total ? vState.right + ' of ' + vState.total + ' correct this session' : VERBS.length + ' verbs · type the form and press Check'; }
-function nextQuestion() {
+function nextQuestion(keepFocus) {
   const q = pickQuestion(); vState.q = q; vState.answered = false;
   $('#vFeedback').textContent = ''; $('#vFeedback').className = ''; $('#vTable').textContent = '';
   const inp = $('#vInput'); inp.value = ''; inp.disabled = false; inp.className = '';
@@ -323,18 +323,18 @@ function nextQuestion() {
   const subj = document.createElement('span'); subj.className = 'subj'; subj.textContent = SUBJ[q.i] + ' ';
   const blank = document.createElement('span'); blank.className = 'blank'; blank.textContent = '…';
   $('#vPrompt').append(chip, document.createElement('br'), subj, blank);
-  vStat(); inp.focus({ preventScroll: true });
+  vStat(); if (keepFocus) inp.focus({ preventScroll: true });
 }
 function checkAnswer() {
   const q = vState.q; if (!q) return;
   const val = normA($('#vInput').value); if (!val) return;
   const acc = accepted(q.v, q.t, q.i), ok = acc.some(a => normA(a) === val);
   vRecord(q.v.inf, q.t, ok); vState.total++; if (ok) vState.right++;
-  vState.answered = true; $('#vInput').disabled = true; $('#vInput').className = ok ? 'ok' : 'bad';
+  vState.answered = true; $('#vInput').className = ok ? 'ok' : 'bad';
   const fb = $('#vFeedback'); fb.className = ok ? 'ok' : 'bad';
   fb.textContent = ok ? 'Correct! ' + SUBJ[q.i] + ' ' + acc[0] : 'Not quite. ' + SUBJ[q.i] + ' ' + acc.join(' / ');
   $('#vTable').textContent = ''; $('#vTable').appendChild(verbTable(q.v));
-  $('#vBtn').textContent = 'Next'; $('#vBtn').focus({ preventScroll: true }); vStat();
+  $('#vBtn').textContent = 'Next'; vStat();
 }
 
 /* ---------- browse ---------- */
@@ -360,7 +360,9 @@ function renderChips() {
   }
 }
 $('#btnVerbs').onclick = () => { show('verbs'); renderChips(); if (!vState.q) nextQuestion(); };
-$('#vBack').onclick = () => { show('home'); };
+$('#vBack').onclick = () => { document.activeElement && document.activeElement.blur(); document.body.classList.remove('typing'); show('home'); };
+$('#vInput').addEventListener('focus', () => { document.body.classList.add('typing'); setTimeout(() => window.scrollTo(0, 0), 50); });
+$('#vInput').addEventListener('blur', () => document.body.classList.remove('typing'));
 $('#vTabs').onclick = (e) => {
   const b = e.target.closest('button'); if (!b) return;
   document.querySelectorAll('#vTabs button').forEach(x => x.setAttribute('aria-pressed', x === b));
@@ -368,5 +370,6 @@ $('#vTabs').onclick = (e) => {
   if (b.dataset.vt === 'browse') renderBrowse();
 };
 $('#vSearch').oninput = renderBrowse;
-$('#vBtn').onclick = () => vState.answered ? nextQuestion() : checkAnswer();
-$('#vInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); vState.answered ? nextQuestion() : checkAnswer(); } });
+$('#vBtn').addEventListener('pointerdown', (e) => e.preventDefault());   // keep the keyboard open
+$('#vBtn').onclick = () => vState.answered ? nextQuestion(true) : checkAnswer();
+$('#vInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); vState.answered ? nextQuestion(true) : checkAnswer(); } });

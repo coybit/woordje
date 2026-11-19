@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="theme-color" content="#F6F3EC">
 <title>Woordje</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -102,6 +102,13 @@ h1,h2{font-family:Newsreader,Georgia,serif;font-weight:600;margin:0}
 .vitem summary{min-height:44px;display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:var(--muted)}
 .vitem summary b{font-family:Newsreader,serif;font-size:20px;color:var(--ink)}
 .vitem .vt{margin-bottom:10px}
+.vrow{display:flex;gap:10px}
+.vrow #vInput{flex:1;min-width:0}
+.vrow .btn{width:auto;min-width:92px}
+body.typing #verbs #vTabs,body.typing #verbs #vChips,body.typing #verbs #vStat,body.typing #verbs #vTable{display:none}
+body.typing #verbs{padding-top:10px}
+body.typing #verbs .vcard{padding:14px;gap:8px}
+body.typing #vInf{font-size:30px}
 #scrim{position:fixed;inset:0;background:rgba(29,35,48,.4);z-index:10}
 #sheet{position:fixed;left:0;right:0;bottom:0;z-index:11;max-width:520px;margin:0 auto;background:#fff;border-radius:24px 24px 0 0;box-shadow:0 -8px 30px rgba(0,0,0,.18);padding:12px 24px max(28px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:16px;max-height:88dvh;overflow:auto}
 .grab{align-self:center;width:40px;height:5px;border-radius:3px;background:#C9CCD4}
@@ -157,9 +164,11 @@ h1,h2{font-family:Newsreader,Georgia,serif;font-weight:600;margin:0}
       <div id="vEn"></div>
       <div id="vInf"></div>
       <div id="vPrompt"></div>
-      <input id="vInput" type="text" aria-label="Your answer" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <div class="vrow">
+        <input id="vInput" type="text" aria-label="Your answer" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done">
+        <button class="btn primary" id="vBtn">Check</button>
+      </div>
       <div id="vFeedback" role="status"></div>
-      <button class="btn primary" id="vBtn">Check</button>
       <div id="vTable"></div>
     </div>
     <p class="hint" id="vStat"></p>
