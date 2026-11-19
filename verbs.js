@@ -379,7 +379,8 @@ function renderChips() {
     box.appendChild(b);
   }
 }
-$('#btnVerbs').onclick = () => { show('verbs'); renderChips(); if (!vState.q) nextQuestion(); };
+$('#btnVerbs').onclick = () => { show('verbs'); renderChips(); $('#vTabs button[data-vt=practice]').click(); if (!vState.q) nextQuestion(); };
+$('#btnBrowse').onclick = () => { show('verbs'); renderChips(); $('#vTabs button[data-vt=browse]').click(); };
 $('#vBack').onclick = () => { document.activeElement && document.activeElement.blur(); document.body.classList.remove('typing'); show('home'); };
 $('#vInput').addEventListener('focus', () => { document.body.classList.add('typing'); setTimeout(() => window.scrollTo(0, 0), 50); });
 $('#vInput').addEventListener('blur', () => document.body.classList.remove('typing'));

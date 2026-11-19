@@ -114,6 +114,15 @@ body.typing #vInf{font-size:30px}
 .hintline .linkbtn:disabled{color:var(--muted);opacity:.6}
 #vHintText{font-size:14px;line-height:1.4;color:var(--ink)}
 #vHintText b{font-family:ui-monospace,Menlo,monospace;letter-spacing:.12em;font-size:16px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:stretch}
+.tile{background:var(--card);border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:8px;align-items:flex-start;min-width:0}
+.tile h2{font-size:22px;line-height:1.15}
+.tile p{margin:0 0 4px;font-size:13px;line-height:1.4;color:var(--muted);flex:1}
+.tile .btn.sm{min-height:48px;font-size:15px;padding:0 12px}
+.tile .linkbtn{align-self:center}
+.tico{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;color:var(--ink)}
+.tico.scan{background:var(--new)}
+.tico.verbs{background:var(--learn)}
 #scrim{position:fixed;inset:0;background:rgba(29,35,48,.4);z-index:10}
 #sheet{position:fixed;left:0;right:0;bottom:0;z-index:11;max-width:520px;margin:0 auto;background:#fff;border-radius:24px 24px 0 0;box-shadow:0 -8px 30px rgba(0,0,0,.18);padding:12px 24px max(28px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:16px;max-height:88dvh;overflow:auto}
 .grab{align-self:center;width:40px;height:5px;border-radius:3px;background:#C9CCD4}
@@ -139,13 +148,23 @@ body.typing #vInf{font-size:30px}
 <main class="view" id="home">
   <div class="hero">
     <div class="eyebrow">Woordje</div>
-    <h1>Read anything.<br>Learn every word.</h1>
+    <h1>Learn Dutch,<br>word by word.</h1>
   </div>
-  <div class="viewfinder"><div><svg class="icon" style="width:40px;height:40px" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg><b>Frame the printed text</b>Good light, flat page, one paragraph or a whole page.</div></div>
-  <div class="stack">
-    <button class="btn primary" id="btnCamera"><svg class="icon" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg>Take a photo</button>
-    <button class="btn" id="btnUpload"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 9"/></svg>Upload from gallery</button>
-    <button class="btn" id="btnVerbs"><svg class="icon" viewBox="0 0 24 24"><path d="M4 5h16M4 12h10M4 19h16"/><path d="M17 10l3 2-3 2"/></svg>Practice verbs</button>
+  <div class="tiles">
+    <section class="tile" aria-labelledby="tScan">
+      <div class="tico scan"><svg class="icon" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg></div>
+      <h2 id="tScan">Scan a text</h2>
+      <p>Photograph Dutch text, then tap any word to learn it.</p>
+      <button class="btn primary sm" id="btnCamera">Take a photo</button>
+      <button class="linkbtn" id="btnUpload">Upload instead</button>
+    </section>
+    <section class="tile" aria-labelledby="tVerbs">
+      <div class="tico verbs"><svg class="icon" viewBox="0 0 24 24"><path d="M4 5h16M4 12h10M4 19h16"/><path d="M17 10l3 2-3 2"/></svg></div>
+      <h2 id="tVerbs">Practise verbs</h2>
+      <p>250 common verbs in four tenses, with hints.</p>
+      <button class="btn primary sm" id="btnVerbs">Start quiz</button>
+      <button class="linkbtn" id="btnBrowse">Browse the list</button>
+    </section>
   </div>
   <input type="file" id="inCamera" accept="image/*" capture="environment" hidden>
   <input type="file" id="inUpload" accept="image/*" hidden>
