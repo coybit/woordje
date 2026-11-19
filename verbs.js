@@ -292,7 +292,7 @@ function verbTable(v) {
 }
 
 /* ---------- practice ---------- */
-const vState = { hint: 0, on: new Set(TENSES.map(t => t.id)), q: null, answered: false, right: 0, total: 0, last: '' };
+const vState = { skipped: 0, hint: 0, on: new Set(TENSES.map(t => t.id)), q: null, answered: false, right: 0, total: 0, last: '' };
 function pickQuestion() {
   const cands = [];
   for (const v of VERBS) for (const t of TENSES) {
@@ -310,7 +310,7 @@ function pickQuestion() {
   }
   const c = cands[0]; vState.last = c.v.inf; return { v: c.v, t: c.t, i: 0 };
 }
-function vStat() { $('#vStat').textContent = vState.total ? vState.right + ' of ' + vState.total + ' correct this session' : VERBS.length + ' verbs · type the form and press Check'; }
+function vStat() { $('#vStat').textContent = vState.total ? vState.right + ' of ' + vState.total + ' correct this session' + (vState.skipped ? ' · ' + vState.skipped + ' skipped' : '') : VERBS.length + ' verbs · type the form and press Check'; }
 /* ---------- hints ---------- */
 function hintClue(q) {
   const v = q.v, regular = /(te|de)$/.test(v.sg) && v.pl === v.sg + 'n';
@@ -391,7 +391,8 @@ $('#vTabs').onclick = (e) => {
   if (b.dataset.vt === 'browse') renderBrowse();
 };
 $('#vSearch').oninput = renderBrowse;
-for (const id of ['#vBtn', '#vHint']) $(id).addEventListener('pointerdown', (e) => e.preventDefault());
-$('#vHint').onclick = showHint;   // keep the keyboard open
+for (const id of ['#vBtn', '#vHint', '#vSkip']) $(id).addEventListener('pointerdown', (e) => e.preventDefault());
+$('#vHint').onclick = showHint;
+$('#vSkip').onclick = () => { if (!vState.q || vState.answered) return; vState.skipped++; nextQuestion(document.body.classList.contains('typing')); };   // keep the keyboard open
 $('#vBtn').onclick = () => vState.answered ? nextQuestion(true) : checkAnswer();
 $('#vInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); vState.answered ? nextQuestion(true) : checkAnswer(); } });
