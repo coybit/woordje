@@ -312,6 +312,74 @@ function pickQuestion() {
   const c = cands[0]; vState.last = c.v.inf; return { v: c.v, t: c.t, i: 0 };
 }
 function vStat() { $('#vStat').textContent = vState.total ? vState.right + ' of ' + vState.total + ' correct this session' + (vState.skipped ? ' · ' + vState.skipped + ' skipped' : '') : VERBS.length + ' verbs · type the form and press Check'; }
+/* ---------- grammar help and tips ---------- */
+const GRAM = {
+  present: ['<b>Present tense</b>', 'ik = the stem (the infinitive without -en).', 'jij and hij = stem + t. If the stem already ends in -t, nothing is added.', 'wij = the infinitive.', 'With inversion, jij drops the -t: <i>Werk jij?</i>'],
+  imperfect: ['<b>Imperfect (simple past)</b>', 'Regular verbs: stem + -te or -de (plural -ten / -den). Use -te when the stem ends in t, k, f, s, ch or p (<i>\'t kofschip</i>), otherwise -de.', 'Strong verbs change their vowel instead (<i>zitten: zat, zaten</i>), and the plural can differ from the singular.', 'ik, jij and hij always share the same form.'],
+  perfect: ['<b>Perfect (present perfect)</b>', 'hebben or zijn in the present + the past participle at the end: <i>Ik heb gewerkt.</i>', 'Most verbs take hebben. Verbs of movement to a place or change of state take zijn (<i>gaan, komen, worden, blijven</i>).', 'Regular participle: ge- + stem + t/d. Verbs starting with be-, ge-, ver-, ont-, her- or er- get no extra ge-.'],
+  pastperfect: ['<b>Past perfect</b>', 'had or was (imperfect of hebben / zijn) + the past participle at the end.', 'Use it for something that happened before another moment in the past: <i>Ik had gegeten toen hij kwam.</i>', 'Same participle and same hebben/zijn choice as in the perfect.']
+};
+const NOTES = {
+  zijn: 'Zijn is fully irregular: ben, bent, is, zijn. Its own perfect uses zijn: ben geweest.',
+  hebben: 'Hebben is irregular: heb, hebt, heeft, hebben. It is also the most common helper verb: heb gehad.',
+  kunnen: 'Modal verb: ik and hij share one form (ik kan, hij kan), and jij takes kunt.',
+  willen: 'Modal verb: ik and hij share one form (ik wil, hij wil), and jij takes wilt.',
+  zullen: 'Modal verb: ik zal, jij zult, hij zal. It has no past participle, so it has no perfect tense.',
+  mogen: 'Modal verb: ik, jij and hij all use mag.',
+  moeten: 'Modal verb: ik, jij and hij all use moet.',
+  weten: 'Weten: ik, jij and hij all use weet (no extra -t).',
+  worden: 'Worden always takes zijn in the perfect: ben geworden. Jij and hij: wordt.',
+  gaan: 'Short irregular verb: ga, gaat. The vowel is doubled again before -t. It takes zijn: ben gegaan.',
+  staan: 'Short irregular verb: sta, staat. Perfect with hebben: heb gestaan.',
+  slaan: 'Short irregular verb: sla, slaat.',
+  doen: 'Doen: doe, doet, imperfect deed/deden, participle gedaan.',
+  zien: 'Zien: zie, ziet, imperfect zag/zagen, participle gezien.',
+  blijven: 'Blijven always takes zijn: ben gebleven.',
+  gebeuren: 'Gebeuren takes zijn and has no ge-: is gebeurd.'
+};
+const infStem = (v) => /en$/.test(v.inf) ? v.inf.slice(0, -2) : v.inf.slice(0, -1);
+const kofschip = (stem) => /(t|k|f|s|ch|p|x|c)$/.test(stem);
+const isRegular = (v) => /(te|de)$/.test(v.sg) && v.pl === v.sg + 'n';
+function gramTip(q) {
+  const v = q.v, out = [], st = infStem(v);
+  if (NOTES[v.inf]) out.push(NOTES[v.inf]);
+  if (q.t === 'present') {
+    if (/aan$/.test(v.inf) && !NOTES[v.inf]) out.push('Short irregular verb: ' + v.ik + ', ' + v.ik + 'at. The long vowel is doubled again before -t.');
+    if (!v.ov && !/aan$/.test(v.inf) && !NOTES[v.inf]) {
+      if (q.i === 3) out.push('wij always uses the infinitive: ' + v.inf + '.');
+      else if (q.i === 0) out.push('ik is the bare stem: ' + v.inf + ' → ' + v.ik + '.');
+      else out.push(v.ik.endsWith('t') ? 'The stem already ends in -t, so jij and hij add nothing: ' + v.ik + '.' : 'jij and hij add -t to the stem: ' + v.ik + 't.');
+      if (v.ik !== st) {
+        if (/([aeou])\1/.test(v.ik) && !/([aeou])\1/.test(st)) out.push('Spelling: a long vowel is written double when the syllable is closed (' + st.slice(0, -1) + '-' + st.slice(-1) + 'en → ' + v.ik + ').');
+        if (/v$/.test(st) && /f$/.test(v.ik)) out.push('Spelling: v at the end of a word becomes f.');
+        if (/z$/.test(st) && /s$/.test(v.ik)) out.push('Spelling: z at the end of a word becomes s.');
+        if (/([bcdfghjklmnpqrstvwxz])\1$/.test(st) && v.ik === st.slice(0, -1)) out.push('Spelling: a doubled consonant becomes single at the end of the stem (' + v.inf + ' → ' + v.ik + ').');
+      }
+    }
+  } else if (q.t === 'imperfect') {
+    if (isRegular(v)) {
+      const te = /te$/.test(v.sg);
+      out.push('Regular verb: the stem of ' + v.inf + ' is ' + st + '. It ends in ' + (te ? 'a \'t kofschip letter' : 'a letter that is not in \'t kofschip') + ', so add -' + (te ? 'te' : 'de') + ' (plural -' + (te ? 'ten' : 'den') + ').');
+    } else {
+      out.push('Strong (irregular) verb: no -te/-de, the vowel changes. ' + 'Singular ' + v.sg + ', plural ' + v.pl + '.' + ' Learn the pair together.');
+    }
+  } else {
+    const hasGe = v.pp.startsWith('ge') && !(v.inf.startsWith('ge') && !v.pp.startsWith('gege'));
+    if (isRegular(v) && /[td]$/.test(v.pp)) {
+      out.push('Regular participle: ' + (hasGe ? 'ge- + ' : '') + 'stem + ' + (/t$/.test(v.pp) ? 't' : 'd') + (kofschip(st) ? ' (the stem ends in a \'t kofschip letter, so t).' : ' (not a \'t kofschip letter, so d).'));
+      if (/[td]$/.test(st)) out.push('The stem already ends in ' + st.slice(-1) + ', so no extra letter is added.');
+    } else out.push('Strong (irregular) participle: ' + v.pp + (/en$/.test(v.pp) ? ', ending in -en. Learn it with the imperfect.' : '.'));
+    if (!hasGe) out.push('No ge- here: verbs with an unstressed prefix (be-, ge-, ver-, ont-, her-, er-) skip it.');
+    if (v.aux.length > 1) out.push('Both helper verbs occur: hebben for the activity (ik heb gelopen), zijn when you travel to a destination (ik ben naar huis gelopen).');
+    else if (v.aux === 'z' && !NOTES[v.inf]) out.push('This verb takes zijn: it expresses movement to a place or a change of state.');
+    else if (v.aux === 'h' && !NOTES[v.inf]) out.push('This verb takes hebben, like most verbs.');
+    if (q.t === 'pastperfect') out.push('Past perfect = ' + (v.aux[0] === 'h' ? 'had' : 'was') + ' + participle, used for something that happened before another past moment.');
+  }
+  return out;
+}
+function paragraphs(box, arr, html) { box.textContent = ''; arr.forEach((t) => { const p = document.createElement('p'); if (html) p.innerHTML = t; else p.textContent = t; box.appendChild(p); }); }
+function showTip(q) { const tips = gramTip(q); const box = $('#vTip'); box.hidden = !tips.length; if (!tips.length) return; box.textContent = ''; const h = document.createElement('b'); h.textContent = 'Tip'; box.appendChild(h); tips.forEach((t) => { const p = document.createElement('p'); p.textContent = t; box.appendChild(p); }); }
+
 /* ---------- hints ---------- */
 function hintClue(q) {
   const v = q.v, regular = /(te|de)$/.test(v.sg) && v.pl === v.sg + 'n';
@@ -344,6 +412,7 @@ function newRound() { vState.rn = 0; vState.rr = 0; vState.missed = []; $('#vDon
 function nextQuestion(keepFocus) {
   if (vState.rn >= ROUND) { showDone(); return; }
   const q = pickQuestion(); vState.q = q; vState.answered = false; vState.hint = 0;
+  $('#vTip').hidden = true; $('#vGram').hidden = true; $('#vGramBtn').textContent = 'Grammar'; $('#vGramBtn').setAttribute('aria-expanded', 'false');
   $('#vHintText').textContent = ''; $('#vHint').textContent = 'Hint'; $('#vHint').disabled = false; $('.hintline').hidden = false;
   $('#vFeedback').textContent = ''; $('#vFeedback').className = ''; $('#vTable').textContent = '';
   const inp = $('#vInput'); inp.value = ''; inp.disabled = false; inp.className = '';
@@ -362,7 +431,7 @@ function checkAnswer() {
   const val = normA($('#vInput').value); if (!val) return;
   const acc = accepted(q.v, q.t, q.i), ok = acc.some(a => normA(a) === val);
   const hinted = vState.hint > 0; vRecord(q.v.inf, q.t, ok && !hinted); vState.total++; if (ok && !hinted) vState.right++;
-  $('.hintline').hidden = true;
+  $('.hintline').hidden = true; $('#vGram').hidden = true; showTip(q);
   vState.rn++; if (ok && !hinted) vState.rr++; else vState.missed.push({ inf: q.v.inf, t: q.t, answer: SUBJ[q.i] + ' ' + acc[0] }); vProg();
   vState.answered = true; $('#vInput').className = ok ? 'ok' : 'bad';
   const fb = $('#vFeedback'); fb.className = ok ? 'ok' : 'bad';
@@ -405,8 +474,9 @@ $('#vTabs').onclick = (e) => {
   if (b.dataset.vt === 'browse') renderBrowse();
 };
 $('#vSearch').oninput = renderBrowse;
-for (const id of ['#vBtn', '#vHint', '#vSkip']) $(id).addEventListener('pointerdown', (e) => e.preventDefault());
+for (const id of ['#vBtn', '#vHint', '#vSkip', '#vGramBtn']) $(id).addEventListener('pointerdown', (e) => e.preventDefault());
 $('#vHint').onclick = showHint;
+$('#vGramBtn').onclick = () => { const g = $('#vGram'), open = g.hidden; if (open && vState.q) paragraphs(g, GRAM[vState.q.t], true); g.hidden = !open; $('#vGramBtn').textContent = open ? 'Hide' : 'Grammar'; $('#vGramBtn').setAttribute('aria-expanded', open); };
 $('#vAgain').onclick = newRound;
 $('#vSkip').onclick = () => { if (!vState.q || vState.answered) return; vState.skipped++; nextQuestion(document.body.classList.contains('typing')); };   // keep the keyboard open
 $('#vBtn').onclick = () => vState.answered ? nextQuestion(true) : checkAnswer();
