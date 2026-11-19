@@ -77,6 +77,31 @@ h1,h2{font-family:Newsreader,Georgia,serif;font-weight:600;margin:0}
 .croptools label{font-size:13px;font-weight:600;color:var(--muted)}
 .croptools .iconbtn{background:var(--card)}
 .cropact{display:flex;gap:10px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 12px}
+.chip{min-height:40px;padding:0 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);font-size:13px;font-weight:600}
+.chip[aria-pressed=true]{background:var(--ink);color:#fff}
+.vcard{background:var(--card);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:12px}
+#vEn{font-size:14px;color:var(--muted)}
+#vInf{font-family:Newsreader,Georgia,serif;font-size:38px;font-weight:600;line-height:1.1;margin-top:-6px}
+#vPrompt{font-size:18px;line-height:1.7}
+.tchip{display:inline-block;font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:2px 10px;border-radius:999px;background:var(--seg);color:var(--ink);line-height:1.6}
+.subj{font-weight:600}
+.blank{color:var(--muted)}
+#vInput{width:100%;min-height:52px;border-radius:12px;border:1.5px solid #B9BDC8;padding:0 14px;font:inherit;font-size:18px;background:#fff;color:var(--ink)}
+#vInput.ok{border-color:var(--known);background:#EAF5EE}
+#vInput.bad{border-color:#B3261E;background:#FCEDEB}
+#vFeedback{font-size:15px;font-weight:600;min-height:0}
+#vFeedback.ok{color:var(--known)}
+#vFeedback.bad{color:#B3261E}
+.vt{display:flex;flex-direction:column;gap:2px;font-size:14px;margin-top:4px}
+.vt .tn{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-top:10px}
+.vt .g{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;line-height:1.35}
+.vt .g span{color:var(--muted)}
+#vSearch{width:100%;min-height:48px;border-radius:12px;border:1.5px solid #B9BDC8;padding:0 14px;font:inherit;font-size:16px;margin:14px 0 10px;background:#fff}
+.vitem{background:var(--card);border-radius:14px;padding:4px 14px;margin-bottom:8px}
+.vitem summary{min-height:44px;display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:var(--muted)}
+.vitem summary b{font-family:Newsreader,serif;font-size:20px;color:var(--ink)}
+.vitem .vt{margin-bottom:10px}
 #scrim{position:fixed;inset:0;background:rgba(29,35,48,.4);z-index:10}
 #sheet{position:fixed;left:0;right:0;bottom:0;z-index:11;max-width:520px;margin:0 auto;background:#fff;border-radius:24px 24px 0 0;box-shadow:0 -8px 30px rgba(0,0,0,.18);padding:12px 24px max(28px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:16px;max-height:88dvh;overflow:auto}
 .grab{align-self:center;width:40px;height:5px;border-radius:3px;background:#C9CCD4}
@@ -108,12 +133,41 @@ h1,h2{font-family:Newsreader,Georgia,serif;font-weight:600;margin:0}
   <div class="stack">
     <button class="btn primary" id="btnCamera"><svg class="icon" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg>Take a photo</button>
     <button class="btn" id="btnUpload"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 9"/></svg>Upload from gallery</button>
+    <button class="btn" id="btnVerbs"><svg class="icon" viewBox="0 0 24 24"><path d="M4 5h16M4 12h10M4 19h16"/><path d="M17 10l3 2-3 2"/></svg>Practice verbs</button>
   </div>
   <input type="file" id="inCamera" accept="image/*" capture="environment" hidden>
   <input type="file" id="inUpload" accept="image/*" hidden>
   <div class="sect"><span>Recent scans</span><button class="linkbtn" id="toWords">My words</button></div>
   <div class="stack" id="scanList"></div>
   <div style="margin-top:auto;padding-top:24px;text-align:center"><button class="linkbtn" id="toPrivacy">Privacy</button></div>
+</main>
+
+<main class="view" id="verbs" hidden>
+  <div class="rtop" style="margin-bottom:12px">
+    <button class="iconbtn" id="vBack" aria-label="Back"><svg class="icon" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <h2 style="font-size:30px">Verbs</h2>
+  </div>
+  <div class="seg" id="vTabs">
+    <button class="learning" data-vt="practice" aria-pressed="true">Practice</button>
+    <button class="learning" data-vt="browse" aria-pressed="false">Browse</button>
+  </div>
+  <div id="vPractice">
+    <div class="chips" id="vChips"></div>
+    <div class="vcard">
+      <div id="vEn"></div>
+      <div id="vInf"></div>
+      <div id="vPrompt"></div>
+      <input id="vInput" type="text" aria-label="Your answer" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <div id="vFeedback" role="status"></div>
+      <button class="btn primary" id="vBtn">Check</button>
+      <div id="vTable"></div>
+    </div>
+    <p class="hint" id="vStat"></p>
+  </div>
+  <div id="vBrowse" hidden>
+    <input id="vSearch" type="search" placeholder="Search a verb or its meaning" aria-label="Search verbs" autocomplete="off">
+    <div id="vList"></div>
+  </div>
 </main>
 
 <main class="view" id="privacy" hidden>
@@ -482,5 +536,6 @@ $('#sSpeak').onclick = async () => {
 
 renderHome();
 </script>
+<script src="verbs.js"></script>
 </body>
 </html>
